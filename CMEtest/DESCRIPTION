@@ -1,0 +1,19 @@
+Package: CMEtest
+Type: Package
+Title: Covariance Matrix Estimation test
+Version: 0.0
+Date: 2014-03-23
+Author: Mohamed Ishmael Diwan Belghazi
+Maintainer: Mohamed Ishmael Diwan Belghazi <mohamed.belghazi@mail.mcgill.ca>
+Description: This a test for the Covariance Matrix Estimators proposal.
+License: GPL-3
+VignetteBuilder: knitr
+Depends:
+    R (>= 2.14.0),
+    zoo,
+    xts (>= 0.8),
+    PerformanceAnalytics (>= 1.0.0),
+    tawny,
+    robust,
+Suggests:
+    knitr
