@@ -1,0 +1,228 @@
+\documentclass[12pt,letterpaper,english]{article}
+\usepackage[OT1]{fontenc}
+
+\usepackage{verbatim}
+\usepackage{Rd}
+\usepackage{amsmath}
+
+\begin{document}
+
+
+\title{Using CMEtest with PortfolioAnalytics}
+\author{Mohamed Ishmael Diwan Belghazi}
+
+\maketitle
+
+\begin{abstract}
+The purpose of this vignette is to show how to pass custom location and scatter estimators to PortfolioAnalytics using CMEtest.
+\end{abstract}
+
+\tableofcontents
+
+\section{Preliminaries}
+\subsection{Loading packages}
+Loading Packages and sourcefiles. CMEtest is not yet under package format as some thinking is still required concerning it's internal architecture.
+<<>>=
+# Cleaning Environment
+rm(list = ls())
+# Loading packages
+suppressMessages(require(robust))
+suppressMessages(require(PortfolioAnalytics))
+suppressMessages(require(PerformanceAnalytics))
+suppressMessages(require(tawny))
+# Loading  optimization packages
+suppressMessages(require(ROI))
+suppressMessages(require(ROI.plugin.glpk))
+suppressMessages(require(ROI.plugin.quadprog))
+
+##################
+## Loading test ##
+##################
+
+source("CMEtest.R")
+options(width=60)
+@
+For now, the package tawny is loaded only for the dataset.
+\subsection{Loading Data}
+We take 50 observations for 10 assets.
+<<>>=
+##################
+## Loading data ##
+##################
+
+# Loading edhec data
+data(sp500.subset)
+returns <- sp500.subset[1:50,1:10]
+assets <- colnames(returns)
+@
+
+
+\section{Defining portfolio}
+
+We define a Global minimum variance long only portfolio with Box Constraint. Since we are optimizing a var objective, we can use the ROI solver.
+
+<<>>=
+## Specifying portfolio
+port_gmv <- portfolio.spec(assets = assets)
+## specifying long only constraing
+long_const = 0
+## specifying unform upper box constraints
+upper_box <- 0.60
+
+## Setting constraints
+port_gmv <- add.constraint(portfolio = port_gmv,
+                           type = "box",
+                           min = long_const,
+                           max = upper_box)
+## Adding objective function
+port_gmv <- add.objective(portfolio = port_gmv,
+                          type = "risk",
+                          name = "var")
+
+## Showing portfolio specification
+print(port_gmv)
+
+@
+
+We show the portfolio specifications
+<<>>=
+## Showing portfolio specification
+print(port_gmv)
+@
+
+\section{Using CMEtest}
+\subsection{Construting specification}
+For the time being only robust estimation is implemented. Smoothing, shrinking and filtering will be implemented when the architecture will have matured.
+
+We specify an mle (classical covariance) specification and call the summary function.
+<<tidy=FALSE>>=
+## Specifying sample cov
+
+mleCovSpec <- CovSpec(smooth = NULL,
+                      estim = 'mle',
+                      shrink = NULL,
+                      filter = NULL)
+class(mleCovSpec)
+
+## Showing summary
+summary(mleCovSpec)
+@
+
+We also specify an minimum covariance robust estimator (mcd).
+The Minimum Covariance Determinant estimator is a robust estimator of a data set’s covariance introduced by Rousseeuw(1984). The idea is to find a given proportion (h) of “good” observations which are not outliers and compute their empirical covariance matrix. This empirical covariance matrix is then rescaled to compensate the performed selection of observations (“consistency step”).
+
+<<>>=
+robCovSpec <- CovSpec(smooth = NULL,
+                      estim = 'mcd',
+                      shrink = NULL,
+                      filter = NULL)
+
+class(robCovSpec)
+
+## Showing summary
+summary(robCovSpec)
+@
+
+\subsection{Creating moment functions for PortfolioAnalytics}
+
+Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough, to call the MakeMomentFUN function of the specification object.
+
+<<>>=
+##  Generating Moment functions. These functions will dynamically compute
+## location and scatter when passed to optimize.portfolio.
+
+MleMomentFUN <- MakeMomentFUN(mleCovSpec)
+RobMomentFUN <- MakeMomentFUN(robCovSpec)
+@
+Note that for RobMomenFun, only the location and scatter are robust. The third and fourth moment are not computed using robust method. It does not matter if the optimization method and/or objective use at most the first moments.
+An example where it matters, is when using the Cornish-Fisher approximation of a non-normal distribution. The latter approximation being based on the four first cumulant.
+
+\section{Optimizing the portfolios!}
+\subsection{Dynamic moment functions and optimization}
+We are now ready to passe the generated moment functions.
+let us optimize the portfolios!
+<<>>=
+###################################
+## Let's Optimize the potfolios! ##
+###################################
+
+# mle version
+opt_gmv_mle <- optimize.portfolio(R = returns,
+                                 portfolio = port_gmv,
+                                 optimize_method = "ROI",
+                                 momentFUN = "MleMomentFUN",
+                                 trace = TRUE)
+
+## Robust version
+opt_gmv_rob <- optimize.portfolio(R = returns,
+                                 portfolio = port_gmv,
+                                 optimize_method = "ROI",
+                                 momentFUN = "RobMomentFUN",
+                                 trace = TRUE)
+
+
+@
+Let us extract the weights
+For the mle estimator
+<<>>=
+extractWeights(opt_gmv_mle)
+@
+For the mcd estimator
+<<>>=
+extractWeights(opt_gmv_rob)
+@
+\subsection{Computed moment functions and optimization}
+Robust moment computing can be expansive. Thankfully, It is also possible to geenrate pre-computed moment functions. The process is very straightforward, instead of calling the moment making function on a CMEtest specification object it is enough to call it on a CMEtest estimation Object
+
+Let us first explicitly compute the covariance. In order to do so, one has to use the Estimate() generic function on the specification object and on the choosen dataset.
+<<tidy=FALSE>>=
+## Let us compute the covariances
+mleCovEst <- Estimate(mleCovSpec, returns)
+class(mleCovEst)
+robCovEst <- Estimate(robCovSpec, returns)
+class(robCovEst)
+
+@
+Althought it is not necessary, let's get the empirical and robust correlations just for fun.
+
+MLE estimator correlation:
+<<>>=
+## Altough not required let us check the covariance just for fun
+GetCorr(mleCovEst)
+@
+Robust Mcd estimator correlation:
+<<>>=
+GetCorr(robCovEst)
+@
+\subsection{Generating precomputed moment functions}
+Now that we have the estimation object, generating the precomputed moment function as easy as before. One has just to call the MakeMomentFUN function on the CMEtest estimation object.
+
+<<>>=
+## Now we create Precomputed moment functions
+MlePrecompMomentFUN <- MakeMomentFUN(mleCovEst)
+RobPrecompMomentFUN <- MakeMomentFUN(robCovEst)
+@
+
+\subsection{Optimizing portfolio with precomputed moment functions}
+<<>>=
+# mle version
+opt_gmv_mle <- optimize.portfolio(R = returns,
+                                 portfolio = port_gmv,
+                                 optimize_method = "ROI",
+                                 momentFUN = "MlePrecompMomentFUN",
+                                 trace = TRUE)
+
+## Robust version
+opt_gmv_rob <- optimize.portfolio(R = returns,
+                                 portfolio = port_gmv,
+                                 optimize_method = "ROI",
+                                 momentFUN = "RobPrecompMomentFUN",
+                                 trace = TRUE)
+
+
+extractWeights(opt_gmv_mle)
+extractWeights(opt_gmv_rob)
+
+@
+
+\end{document}
