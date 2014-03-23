@@ -1,0 +1,16 @@
+{
+    "contents" : "S3method(Estimate,CMEspec)\nS3method(Estimate,default)\nS3method(GetCorr,CMEest)\nS3method(GetCorr,CMEspec)\nS3method(GetCorr,default)\nS3method(GetCov,CMEest)\nS3method(GetCov,CMEspec)\nS3method(GetCov,default)\nS3method(GetLoc,CMEest)\nS3method(GetLoc,CMEspec)\nS3method(GetLoc,default)\nS3method(MakeMomentFUN,CMEest)\nS3method(MakeMomentFUN,CMEspec)\nS3method(MakeMomentFUN,default)\nexport(CovSpec)\nexport(Estimate)\nexport(GetCorr)\nexport(GetCov)\nexport(GetLoc)\nexport(MakeMomentFUN)\nexport(summary.CMEspec)\nimport(PerformanceAnalytics)\nimport(robust)\n",
+    "created" : 1395611913930.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3934738217",
+    "id" : "A8AB4ADA",
+    "lastKnownWriteTime" : 1395613724,
+    "path" : "~/Dropbox/gsoc2014/GSOC2014/testpkgfinal/CMEtest/NAMESPACE",
+    "project_path" : "NAMESPACE",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_namespace"
+}
