@@ -23,7 +23,7 @@ The purpose of this vignette is to show how to pass custom location and scatter 
 
 \section{Preliminaries}
 \subsection{Loading packages}
-Loading Packages and sourcefiles. CMEtest is not yet under package format as some thinking is still required concerning it's internal architecture.
+Loading Packages and sourcefiles. CMEtest is not yet under package format as some thinking is still required concerning its internal architecture.
 <<>>=
 # Cleaning Environment
 rm(list = ls())
@@ -52,7 +52,7 @@ We take 50 observations for 10 assets.
 ## Loading data ##
 ##################
 
-# Loading edhec data
+# Loading data
 data(sp500.subset)
 returns <- sp500.subset[1:50,1:10]
 assets <- colnames(returns)
@@ -110,7 +110,7 @@ class(mleCovSpec)
 summary(mleCovSpec)
 @
 
-We also specify an minimum covariance robust estimator (mcd).
+We also specify an minimum covariance determinant robust estimator (mcd).
 The Minimum Covariance Determinant estimator is a robust estimator of a data set’s covariance introduced by Rousseeuw(1984). The idea is to find a given proportion (h) of “good” observations which are not outliers and compute their empirical covariance matrix. This empirical covariance matrix is then rescaled to compensate the performed selection of observations (“consistency step”).
 
 <<>>=
@@ -127,7 +127,7 @@ summary(robCovSpec)
 
 \subsection{Creating moment functions for PortfolioAnalytics}
 
-Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough, to call the MakeMomentFUN function of the specification object.
+Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough to call the MakeMomentFUN function on the specification object.
 
 <<>>=
 ##  Generating Moment functions. These functions will dynamically compute
@@ -136,12 +136,12 @@ Creating moment functions for Portfolio Analytics is straightforward using CMEte
 MleMomentFUN <- MakeMomentFUN(mleCovSpec)
 RobMomentFUN <- MakeMomentFUN(robCovSpec)
 @
-Note that for RobMomenFun, only the location and scatter are robust. The third and fourth moment are not computed using robust method. It does not matter if the optimization method and/or objective use at most the first moments.
-An example where it matters, is when using the Cornish-Fisher approximation of a non-normal distribution. The latter approximation being based on the four first cumulant.
+Note that for RobMomenFun, only the location and scatter are robust. The third and fourth moment are not computed using robust method. It does not matter if the optimization method and/or objective use at most the first two moments.
+An example where it matters, is when using the Edgeworth or Cornish-Fisher approximation of a non-normal distribution. The latter approximations being based on the four first cumulant.
 
 \section{Optimizing the portfolios!}
 \subsection{Dynamic moment functions and optimization}
-We are now ready to passe the generated moment functions.
+We are now ready to passe the generated moment function.
 let us optimize the portfolios!
 <<>>=
 ###################################
@@ -165,16 +165,16 @@ opt_gmv_rob <- optimize.portfolio(R = returns,
 
 @
 Let us extract the weights
-For the mle estimator
+For the mle estimator:
 <<>>=
 extractWeights(opt_gmv_mle)
 @
-For the mcd estimator
+For the mcd estimator:
 <<>>=
 extractWeights(opt_gmv_rob)
 @
 \subsection{Computed moment functions and optimization}
-Robust moment computing can be expansive. Thankfully, It is also possible to geenrate pre-computed moment functions. The process is very straightforward, instead of calling the moment making function on a CMEtest specification object it is enough to call it on a CMEtest estimation Object
+Robust moment computing can be expensive. Thankfully, It is also possible to generate pre-computed moment functions. The process is very straightforward, instead of calling the moment making function on a CMEtest specification object it is enough to call it on a CMEtest estimation object.
 
 Let us first explicitly compute the covariance. In order to do so, one has to use the Estimate() generic function on the specification object and on the choosen dataset.
 <<tidy=FALSE>>=
@@ -189,7 +189,7 @@ Althought it is not necessary, let's get the empirical and robust correlations j
 
 MLE estimator correlation:
 <<>>=
-## Altough not required let us check the covariance just for fun
+## Using correlation getter on the estimation object.
 GetCorr(mleCovEst)
 @
 Robust Mcd estimator correlation:
@@ -197,7 +197,7 @@ Robust Mcd estimator correlation:
 GetCorr(robCovEst)
 @
 \subsection{Generating precomputed moment functions}
-Now that we have the estimation object, generating the precomputed moment function as easy as before. One has just to call the MakeMomentFUN function on the CMEtest estimation object.
+Now that we have the estimation object, generating the precomputed moment functions is as easy as before. One has just to call the MakeMomentFUN function on the CMEtest estimation object.
 
 <<>>=
 ## Now we create Precomputed moment functions
