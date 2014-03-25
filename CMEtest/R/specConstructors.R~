@@ -1,0 +1,39 @@
+.MakeDic <- function() {
+    ## Creating environment holding dictionaries
+    .envDic <- new.env(hash = TRUE, parent = .GlobalEnv)
+
+    ## Internal function to build the dictionaries
+    sList = c("Id", "EWMA")
+    sDic = c("IdSmooth", "EWMASmooth")
+    names(sDic) <- sList
+
+    local(smoothDic <- sList, envir = .envDic )
+}
+
+
+
+
+SmoothSpec <- function(smooth = 'Id', smoothCtrl = list(), ...) {
+    ## Smoother specification constructor
+
+
+    if(!(smooth %in% names(smoothDic)))
+        stop("Unrecognized Estimation method")
+
+    ## Creating smoother specificationObjects
+    ## Recording call. match.call() is not enough for printing default argument.
+    CALL <- mget(names(formals()), sys.frame(sys.nframe()))
+    smoothSpecObj <- list()
+    # Recording the raw call
+    smoothSpecObj['.rawCALL'] <- CALL
+    smoothSpecObj['.passCALL'] <- list(fun = smoothDic[names(smoothDic == smooth)],
+                                       funCall = CALL$smoothCtrl,
+                                       caller = smooth)
+
+    class(smoothSpecObj) <- "smoothSpec"
+
+    return(smoothSpecObj)
+
+}
+
+}

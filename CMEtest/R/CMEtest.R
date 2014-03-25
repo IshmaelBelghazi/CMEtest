@@ -3,7 +3,7 @@
 ##' .. content for \description{} (no empty lines) ..
 ##' This function allows specification of a covariance objects.
 ##' .. content for \details{} ..
-##' 
+##'
 ##' @title General Interface for covariance matrix specification
 ##' @param smooth character specifying to smoothing method.
 ##' @param smoothCtrl list containing smoothing parameters
@@ -247,7 +247,7 @@ GetCorr.CMEest <- function(estObj) {
 }
 
 ##' .. content for \description{} (no empty lines) ..
-##' 
+##'
 ##' .. content for \details{} ..
 ##' @title Extract location from Estimation Object
 ##' @param Obj
@@ -272,12 +272,12 @@ GetLoc.CMEest <- function(estObj) {
 ##' .. content for \description{} (no empty lines) ..
 ##'
 ##' .. content for \details{} ..
-##' @title Generates moment function from spec or estimation object 
+##' @title Generates moment function from spec or estimation object
 ##' @param Obj
 ##' @return moment function for portfolioanalytics.
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @import PerformanceAnalytics
-##' @export 
+##' @export
 MakeMomentFUN <- function(Obj) UseMethod('MakeMomentFUN')
 ##' @export
 MakeMomentFUN.default <- function(Obj) cat("Class unknown")
