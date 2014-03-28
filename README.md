@@ -42,7 +42,7 @@ GK:  Implemented
 
 ### EWMA:
 Classical: Not Implemented
-Robust: Implemented
+Robust: Not Implemented
 
 ## Covariance Shrinking:  
 ### Linear:  
