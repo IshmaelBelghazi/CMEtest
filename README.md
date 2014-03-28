@@ -1,24 +1,24 @@
-CMEtest
-=======
-# Architecture
-General Architecture: Prototype
-Methods: A few
-Documentation: nil
-Vignettes: 1
-Bridge to ReturnAnalytics: PortfolioAnalytics only
+CMEtest v0.1
+============
+# Architecture  
+General Architecture: Prototype  
+Methods: A few  
+Documentation: nil  
+Vignettes: 1  
+Bridge to ReturnAnalytics: PortfolioAnalytics only  
 
 # Statistical Methods
 
 ## Smoothing:
 
-Boudt: Implemented
-EWMA: Not Implemented
+Boudt: Implemented  
+EWMA: Not Implemented  
 
 ## Covariance Estimation
 
 ### Classical
 
-MLE: Implemented
+MLE: Implemented  
 
 ### Robust
 
@@ -26,36 +26,36 @@ MLE: Implemented
 
 ##### Minimum Covariance Determinant
 
-fast: Implemented
-weighted: Implemented
+fast: Implemented  
+weighted: Implemented  
 
 ##### Projection method
-Donoho-Stahel: Implemented
+Donoho-Stahel: Implemented  
 
 ##### M estimator
-Rocke: Implemented
+Rocke: Implemented  
 
 #### Pairwise
+  
+OQC: Implemented    
+GK:  Implemented    
 
-OQC: Implemented
-GK:  Implemented
-
-## Covariance Shrinking:
-### Linear:
-LW: Not implemented
-### Non-Linear:
-Fixed-Rank: Not Implemented
-Proportional-Rank: Not Implemented
+## Covariance Shrinking:  
+### Linear:  
+LW: Not implemented    
+### Non-Linear: 
+Fixed-Rank: Not Implemented    
+Proportional-Rank: Not Implemented    
 
 ## Filtering
-RMT: Not Implemented
+RMT: Not Implemented  
 
 ## Unequal data protocols:
-FMMC: Not implemented
-Staumbaugh: Not implemented
-Robust Staumbaugh: Not Implemented
+FMMC: Not implemented    
+Staumbaugh: Not implemented    
+Robust Staumbaugh: Not Implemented  
 
 # Additional statistical tools:
 
 Mahalanobis: Not implemented
-Matrix correlation test: Not Implemented
+Matrix correlation test: Not Implemented  
