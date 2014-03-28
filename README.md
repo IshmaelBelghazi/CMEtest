@@ -38,7 +38,11 @@ Rocke: Implemented
 #### Pairwise
   
 OQC: Implemented    
-GK:  Implemented    
+GK:  Implemented
+
+### EWMA:
+Classical: Not Implemented
+Robust: Implemented
 
 ## Covariance Shrinking:  
 ### Linear:  
