@@ -1,17 +1,22 @@
 .onLoad <- function(libname, pkgname) {
+
+    ##########
+    ## TODO ##
+    ##########
+    ## Ishmael: Move the functions mapping to a safer place
     packageStartupMessage("CMEtest set up has started...")
     ## Creating environment holding dictionaries
     .envDic <- local(new.env())
     ## Specifying buildingblocks categories
-    
+
     bbCategories <- c("smooth", "estim", "shrink", "filter")
     assign("bbCategories", bbCategories, envir = .envDic)
-    
+
     ## Internal function to build the dictionaries
     dicName <- c("sDic", "eDic", "shDic", "fdic")
     ## Smoohing methods
-    sList = c("None", "EWMA")
-    smoothDic = c("None", "EWMASmooth")
+    sList = c("None", "EWMA", "Boudt")
+    smoothDic = c("None", "EWMASmooth", "Boudt")
     names(smoothDic) <- sList
     ## Estimation methods
     reList <- c("auto",
@@ -46,11 +51,11 @@
     packageStartupMessage("CMEtest set up completed\n")
 
     packageStartupMessage("This is Covariance Matrix Estimators test v0.1\n")
-    
+
 }
 
 .onUnload <- function(libpath) {
   ## Cleaning environements
   rm(.envDic, envir=.GlobalEnv)
-  
+
 }

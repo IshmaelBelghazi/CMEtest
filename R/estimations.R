@@ -32,7 +32,7 @@ Estimate.default <- function(obj, data) warning("Unknown Class")
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @export
 Estimate.CMEsmoothSpec <- function(obj, data) {
-    
+
 
     smoothFUN  <- obj$.passCall$fun # Getting function tocall
     smoothArgs <- obj$.passCall$funCall # Getting arguments
@@ -87,7 +87,7 @@ Estimate.CMEestimSpec <- function(obj, data) {
                                         # robust
     data[['.estSpec']] <- obj
     data[['.estEstim']] <- covEst
-    
+
                                         # Assigning class
     class(data) <- "CMEestimEst"
 
@@ -102,7 +102,7 @@ Estimate.CMEestimSpec <- function(obj, data) {
 ##' @title Estimate shrink spec object
 ##' @param obj CMEshrinkSpec
 ##' @param data CMEestimSpec object contraining a covariance
-##' @return CMEshrinkEst object 
+##' @return CMEshrinkEst object
 ##' @author Live session user
 ##' @export
 Estimate.CMEshrinkSpec <- function(obj, data) {
@@ -135,7 +135,7 @@ Estimate.CMEshrinkSpec <- function(obj, data) {
 ##' @title Estimate shrink spec object
 ##' @param obj CMEshrinkSpec
 ##' @param data CMEestimSpec object contraining a covariance
-##' @return CMEshrinkEst object 
+##' @return CMEshrinkEst object
 ##' @author Live session user
 ##' @export
 Estimate.CMEfilterSpec <- function(obj, data) {
@@ -146,7 +146,7 @@ Estimate.CMEfilterSpec <- function(obj, data) {
 
     filterFUN  <- obj$.passCall$fun # Getting function to call
     filterArgs <- obj$.passCall$funCall # Getting arguments
-    
+
     filterArgs[['cov']] <- if(is.null(data$shrunk)) data$scatter else data$shrunk
                                         # Estimating covariance
     filteredCovEst <- if (filterFUN == 'None') NULL else do.call(filterFUN, FilterArgs)
@@ -170,7 +170,7 @@ Estimate.CMEfilterSpec <- function(obj, data) {
 ##'
 ##' .. content for \details{} ..
 ##' @title Estimate a covariance specification object
-##' @param obj a covariance specification object 
+##' @param obj a covariance specification object
 ##' @param data a valid xts or return object
 ##' @return Covariance estimation object
 ##' @author Mohamed Ishmael Diwan
@@ -184,24 +184,24 @@ Estimate.CMEspec <- function(obj, data) {
     smoothed  <- Estimate(obj$smooth, data)
     estimated <- Estimate(obj$estim, smoothed)
     shrunk    <- Estimate(obj$shrink, estimated)
-    filtered  <- Estimate(obj$filter, shrunk) 
+    filtered  <- Estimate(obj$filter, shrunk)
     ## Wrote it at the start using recursion and some grep
-    ## and then I remembered that code is two as hard to debug
+    ## and then I remembered that code is twice as hard to debug
     ## than to write...
-    
+
     ## here we apply any additional transformation
     ## And we add any supplementary slot, such as
     ## the mahalanobis distance...
 
-    ## Additional computattion block starts here
+    ## Additional computation block starts here
 
     CMEest <- filtered
     ## Additional computation block ends here
 
-    
+
     ## Assigning class to return object
     class(CMEest) <- "CMEest"
     return(CMEest)
 
-    
+
 }

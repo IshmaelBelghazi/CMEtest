@@ -48,27 +48,27 @@
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @import robust
 ##' @export
-CMEspec <- function(smooth = NULL,
+CMEspec <- function(smooth = "None",
                     smoothCtrl = list(),
                     estim = "auto",
                     estimCtrl = list(),
-                    shrink = NULL,
+                    shrink = "None",
                     shrinkCtrl = list(),
-                    filter = NULL,
+                    filter = "None",
                     filterCtrl = list(), ...) {
-  
+
   ## Recording call. match.call() is not enough for printing default argument.
   CALL <- mget(names(formals()),sys.frame(sys.nframe()))
   ## Creating object
   spec <- list()
-  spec <- sapply(get("bbCategories", envir=.envDic), 
+  spec <- sapply(get("bbCategories", envir=.envDic),
                   function(X) {spec[[X]] <- .MakeSpec(X, get(X), get(paste0(X, "Ctrl")))},
                   simplify = FALSE)
-  
+
   spec[['CALL']] <- CALL
   class(spec) <-'CMEspec'
   return(spec)
-  
+
 }
 
 ##' .. content for \description{} (no empty lines) ..
@@ -89,8 +89,6 @@ summary.CMEspec <- function(object, ...) {
   cat(sprintf('\tShrinking: %s\n', object$shrink$.passCall$funMethod))
   cat(sprintf('\tFiltering: %s\n', object$filter$.passCall$funMethod))
   cat("\n-----------------------------------\n")
-  
-  
+
+
 }
-
-

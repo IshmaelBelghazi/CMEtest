@@ -2,9 +2,9 @@
 \alias{CMEspec}
 \title{General Interface for covariance matrix specification}
 \usage{
-CMEspec(smooth = NULL, smoothCtrl = list(), estim = "auto",
-  estimCtrl = list(), shrink = NULL, shrinkCtrl = list(), filter = NULL,
-  filterCtrl = list(), ...)
+CMEspec(smooth = "None", smoothCtrl = list(), estim = "auto",
+  estimCtrl = list(), shrink = "None", shrinkCtrl = list(),
+  filter = "None", filterCtrl = list(), ...)
 }
 \arguments{
   \item{smooth}{character specifying to smoothing method.}
