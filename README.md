@@ -57,5 +57,5 @@ Robust Staumbaugh: Not Implemented
 
 # Additional statistical tools:
 
-Mahalanobis: Not implemented
-Matrix correlation test: Not Implemented  
+Mahalanobis: Not implemented  
+Matrix correlation test: Not Implemented    
