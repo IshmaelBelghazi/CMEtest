@@ -8,11 +8,12 @@ Maintainer: Mohamed Ishmael Diwan Belghazi <mohamed.belghazi@mail.mcgill.ca>
 Description: This a test for the Covariance Matrix Estimators proposal.
 License: GPL-3
 VignetteBuilder: knitr
-Depends:
-    R (>= 2.14.0),
-    zoo,
-    xts (>= 0.8),
-    PerformanceAnalytics (>= 1.0.0),
-    robust
-Suggests:
-    knitr
+Depends: 
+ R (>= 2.14.0),
+ zoo,
+ xts (>= 0.8),
+ PerformanceAnalytics (>= 1.0.0),
+ robust
+Suggests: 
+ knitr,
+  testthat
