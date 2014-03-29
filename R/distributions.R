@@ -112,21 +112,4 @@ marpasMom <- function(k, sigma, Q, return.all = FALSE) {
 
 }
 
-#,----
-#| marcenko likelihood
-#`----
 
-mpLik <- function(data, sigma, Q) {
-
-    minEig <- min(data)
-    maxEig <- max(data)
-
-    lambdaPlus <- sigma^2 * (1 + sqrt(1/Q))^2
-    lambdaMinus <- sigma^2 * (1 - sqrt(1/Q))^2
-
-    constant <- Q/(2 * pi * sigma^2)
-    density <- constant * sqrt((lambdaPlus - x) * (x - lambdaMinus)) / x
-
-
-
-}
