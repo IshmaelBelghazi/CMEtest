@@ -15,6 +15,8 @@
 #`----
 
 
+
+
 dmarpasV2 <- function(x, sigma, Q) {
     x <- as.array(x)
     if(sigma < 0)
@@ -37,8 +39,8 @@ dmarpasV2 <- function(x, sigma, Q) {
     cat(density[supportCond])
     return(density)
 }
-
-dmarpasV1 <- function(x, sigma, Q) {
+##'@export
+dmarpasV1 <- function(x, sigma, Q, fit = FALSE) {
     ##x <- as.array(x)
     if(sigma < 0)
         stop("sigma should be positive")
@@ -55,23 +57,32 @@ dmarpasV1 <- function(x, sigma, Q) {
     density <- constant * sqrt((lambdaPlus - x) * (x - lambdaMinus)) / x
     } else {
 
-    density <- 0
+    density <- if(fit) .Machine$double.xmin else 0 ## Hack for mle optimization
+
     }
 
     return(density)
 }
 
+
+
 #,----
 #| Marchenko-Pastur distribution
 #`----
-
+##'@export
 dmarpas <- function(x, sigma, Q) {
 
     density <- Vectorize(function(X) dmarpasV1(X, sigma, Q))
 
     return(density(x))
 }
+##'@export
+dmarpasFit <- function(x, sigma, Q){
+    density <- Vectorize(function(x) dmarpasV1(x, sigma, Q, TRUE))
 
+    return(density(x))
+}
+##'@export
 pmarpas <- function(p, sigma, Q) {
 
     if(is.infinite(p) && (sign(p) == -1)) {
@@ -84,12 +95,24 @@ pmarpas <- function(p, sigma, Q) {
 
     return(cdf)
 }
+##'@export
+pmarpasFit <- function(p, sigma, Q) {
 
+    if(is.infinite(p) && (sign(p) == -1)) {
+        cdf <- 0
+    } else {
+        integrand <- function(x) dmarpas(x, sigma, Q, TRUE)
+        integral <- integrate(integrand, lower = -Inf, upper = p)
+        cdf <- integral$value
+    }
+
+    return(cdf)
+}
 
 #,----
 #| Marchenko-Pastur Moments
 #`----
-
+##'@export
 marpasMom <- function(k, sigma, Q, return.all = FALSE) {
     if(sigma < 0)
         stop("sigma should be positive")
@@ -113,3 +136,21 @@ marpasMom <- function(k, sigma, Q, return.all = FALSE) {
 }
 
 
+#,----
+#| Marcenko-Pastur eigenvals
+#`----
+##'@export
+marpasEig <- function(sigma, Q) {
+
+    eigVals <- list(lambdaMinus = sigma^2 * (1 - sqrt(1/Q))^2,
+                    lambdaPlus = sigma^2 * (1 + sqrt(1/Q))^2)
+
+    return(eigVals)
+
+}
+
+#,----
+#| Marchenko-Pastur Quality
+#`----
+##'@export
+GetQ <- function(data) dim(data)[1]/dim(data)[2]

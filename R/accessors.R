@@ -51,7 +51,7 @@ GetCorr.CMEspec <- function(obj) cat("Estimate specfication first")
 GetCorr.CMEest <- function(obj) {
 
     if(obj$.estEstim$corr){
-        corr <- estObj$scatter
+        corr <- obj$scatter
     } else {
         corr <- cov2cor(obj$scatter)
     }
@@ -90,8 +90,7 @@ GetLoc.default <- function(obj) warning("Unknown class")
 GetLoc.CMEspec <- function(obj) cat("Estimate specfication first")
 ##' @export
 GetLoc.CMEest <- function(obj) {
-  
-  return(obj$loc)
-  
-}
 
+  return(obj$loc)
+
+}

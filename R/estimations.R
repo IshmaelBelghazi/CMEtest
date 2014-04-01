@@ -3,7 +3,6 @@
 ## TODO ##
 ##########
 
-## (Ishmael): Ponder whether to separate constructors from estimation methods.
 
 #################################
 ## Defining Estimation Objects ##
@@ -33,27 +32,10 @@ Estimate.default <- function(obj, data) warning("Unknown Class")
 ##' @export
 Estimate.CMEsmoothSpec <- function(obj, data) {
 
+    smoothEst <- .MakeSmoothEst(obj, data)
 
-    smoothFUN  <- obj$.passCall$fun # Getting function tocall
-    smoothArgs <- obj$.passCall$funCall # Getting arguments
-    smoothArgs[['data']] <- data # All functions will be wrapped such as
-                                        # they can be called as data
-                                        # plus something else.
-                                        # Calling smoothing function
-    smoothData <- if (smoothFUN == 'None') data else do.call(smoothFUN, smoothArgs)
+    return(smoothEst)
 
-#######################################
-##     Constructing smoother object  ##
-#######################################
-
-    smoothObj <- list(data = data,
-                      smoothData = smoothData,
-                      .smoothSpec = obj)
-
-                                        # Assigning class
-    class(smoothObj) <- "CMEsmoothEst"
-
-    return(smoothObj)
 
 }
 
@@ -71,27 +53,7 @@ Estimate.CMEestimSpec <- function(obj, data) {
     if(class(data) != "CMEsmoothEst")
         stop("data should be a CMEsmoothEst object")
 
-    estimFUN  <- obj$.passCall$fun # Getting function to call
-    estimArgs <- obj$.passCall$funCall # Getting arguments
-    estimArgs[['data']] <- as.matrix(data$smoothData) # using smoothed data
-                                        # Estimating covariance
-    covEst <- if (estimFUN == 'None') NULL else do.call(estimFUN, estimArgs)
-
-#########################################
-##     Constructing Estimation object  ##
-#########################################
-
-    data[['loc']] <- covEst$center
-    data[['scatter']] <- covEst$cov # Need to handle the case where the
-                                        # object is not of class
-                                        # robust
-    data[['.estSpec']] <- obj
-    data[['.estEstim']] <- covEst
-
-                                        # Assigning class
-    class(data) <- "CMEestimEst"
-
-    return(data)
+    estimEst <- .MakeEstimEst(obj, data)
 
 }
 
@@ -110,23 +72,7 @@ Estimate.CMEshrinkSpec <- function(obj, data) {
     if(class(data) != "CMEestimEst")
         stop("data should be a CMEestimEst object")
 
-
-    shrinkFUN  <- obj$.passCall$fun # Getting function to call
-    shrinkArgs <- obj$.passCall$funCall # Getting arguments
-    shrinkArgs[['cov']] <- data$cov
-                                        # Estimating covariance
-    shrunkCovEst <- if (shrinkFUN == 'None') NULL else do.call(shrinkFUN, shrinkArgs)
-
-##################################################
-##     Constructing shrinker estimation object  ##
-##################################################
-
-    data[['shrunkCov']] <- shrunkCovEst
-    data[['.shrinkSpec']] <- obj
-                                        # Assilass
-    class(data) <- "CMEshrinkEst"
-
-    return(data)
+    shrinkEst <- .MakeShrinkEst(obj, data)
 }
 
 ##' .. content for \description{} (no empty lines) ..
@@ -143,24 +89,8 @@ Estimate.CMEfilterSpec <- function(obj, data) {
     if(class(data) != "CMEshrinkEst")
         stop("data should be  CMEshrinkEst object")
 
+    filterEst <- .MakeFilterEst(obj, data)
 
-    filterFUN  <- obj$.passCall$fun # Getting function to call
-    filterArgs <- obj$.passCall$funCall # Getting arguments
-
-    filterArgs[['cov']] <- if(is.null(data$shrunk)) data$scatter else data$shrunk
-                                        # Estimating covariance
-    filteredCovEst <- if (filterFUN == 'None') NULL else do.call(filterFUN, FilterArgs)
-
-###################################################
-##     Constructing filtering estimation object  ##
-###################################################
-
-    data[['filteredCov']] <- filteredCovEst
-    data[['.filterSpec']] <- obj
-    ## Assigning Class
-    class(data) <- "CMEfilterEst"
-
-    return(data)
 }
 
 #####################################

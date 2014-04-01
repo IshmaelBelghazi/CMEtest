@@ -15,8 +15,8 @@
     ## Internal function to build the dictionaries
     dicName <- c("sDic", "eDic", "shDic", "fdic")
     ## Smoohing methods
-    sList = c("None", "EWMA", "Boudt")
-    smoothDic = c("None", "EWMASmooth", "Boudt")
+    sList = c("None", "Boudt")
+    smoothDic = c("None", "Boudt")
     names(smoothDic) <- sList
     ## Estimation methods
     reList <- c("auto",
@@ -34,13 +34,13 @@
     names(ceDic) <- ceList
     estimDic <- c(ceDic, reDic)
     ## Shrinking methods
-    shList <- c("None", "LW", "NLW")
-    shrinkDic <- c("None", "LedoitWolf", "NLNledoitWold")
+    shList <- c("None")
+    shrinkDic <- c("None")
     names(shrinkDic) <- shList
 
     ## Filtering methods
-    fList <- c("None", "Marcenko-Pastur")
-    filterDic <- c("None", "mpfilter")
+    fList <- c("None", "MP")
+    filterDic <- c("None", "MPfilter")
     names(filterDic) <- fList
 
     sapply(get("bbCategories",envir = .envDic),
