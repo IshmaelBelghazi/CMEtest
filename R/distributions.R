@@ -113,7 +113,7 @@ pmarpasFit <- function(p, sigma, Q) {
 #| Marchenko-Pastur Moments
 #`----
 ##'@export
-marpasMom <- function(k, sigma, Q, return.all = FALSE) {
+marpas <- function(k, sigma, Q, return.all = FALSE) {
     if(sigma < 0)
         stop("sigma should be positive")
     if(Q < 0)

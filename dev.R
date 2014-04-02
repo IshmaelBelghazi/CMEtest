@@ -1,13 +1,13 @@
 load_all()
 data(sp500.subset)
-myCovSpec <- CMEspec(estimCtrl = list(corr = TRUE), filter = "MP", filterCtrl = list(kernel = "gaussian", bw = "SJ", change.vars = FALSE, fit.type = "median", Q.mult = 1 ))
+myCovSpec <- CMEspec(estim = "mle",
+                     estimCtrl = list(corr = TRUE),
+                     filter = "MP",
+                     filterCtrl = list(fit.type = "analogic", norm.meth = "partial"))
 myCovEst <- Estimate(myCovSpec, sp500.subset)
 
-x <- myCovEst$.filterEstim$eigDens$x
-y <- myCovEst$.filterEstim$eigDens$y
+plot(myCovEst$.filterEstim$eigHist)
 estimates <- myCovEst$.filterEstim$mpEstimates
-Vars <- estimates[1]
-Qs <-estimates[2]
-
-plot(x,y, "lines")
-lines(x, y = dmp(x, Vars, Qs))
+sigma <- estimates[1]
+Q <-estimates[2]
+lines(x = seq(0,30,0.001), y = dmarpas(x = seq(0,30,0.001), Vars, Qs))

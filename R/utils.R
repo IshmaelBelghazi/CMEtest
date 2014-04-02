@@ -28,7 +28,7 @@ CMEhelp <- function() {
 ###########################################
 ## Computation specific helper functions ##
 ###########################################
-
+##'@export
 corr2cov<- function(corMat, R) {
   sds <- apply(R, 2, sd)
   covMat <- corMat * sds * (rep(sds, each=nrow(corMat)))

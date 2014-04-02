@@ -18,18 +18,32 @@
 ##' @return covariance
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @export
-GetCov <- function(obj) UseMethod("GetCov")
+GetCov <- function(obj, type = "default") UseMethod("GetCov")
 ##' @export
-GetCov.default <- function(obj) warning("Unknown class")
+GetCov.default <- function(obj, type = "default") warning("Unknown class")
 ##' @export
-GetCov.CMEspec <- function(obj) cat("Estimate specfication first")
+GetCov.CMEspec <- function(obj, type = "default") cat("Estimate specfication first")
 ##' @export
-GetCov.CMEest <- function(obj) {
+GetCov.CMEest <- function(obj, type = "default") {
 
     # Checking if the object contains covariance or correlation. Note that, contrary to the 'robust' package CME passe the data to the object. So it should be possible to return the covariance directly without reestimating the whole object. I am still pondering if it make sense to this here
-    if(obj$.estEstim$corr) warning("Returning correlation. Restimate with corr = FALSE")
+    switch(type,
+           shrunk = {scatter <- obj$shrunkScatter},
+           filtered = {scatter <- obj$filteredScatter},
+           {scatter <- obj$scatter})
 
-    return(obj$scatter)
+    if(!is.null(scatter)) {
+        data <- if(is.null(obj$smoothData)) obj$data else obj$smoothData
+        if(obj$corr){
+            cov <- cor2cov(scatter, data) 
+        } else {
+            cov <- scatter
+        }
+    } else {
+        cov <- scatter
+    }
+    
+    return(cov)
 }
 
 
@@ -42,20 +56,27 @@ GetCov.CMEest <- function(obj) {
 ##' @return Returns Correlation
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @export
-GetCorr <- function(obj) UseMethod("GetCorr")
+GetCorr <- function(obj, type = "default") UseMethod("GetCorr")
 ##' @export
-GetCorr.default <- function(obj) warning("Unknown class")
+GetCorr.default <- function(obj, type = "default") warning("Unknown class")
 ##' @export
-GetCorr.CMEspec <- function(obj) cat("Estimate specfication first")
+GetCorr.CMEspec <- function(obj, type = "default") cat("Estimate specfication first")
 ##' @export
-GetCorr.CMEest <- function(obj) {
+GetCorr.CMEest <- function(obj, type = "default") {
 
-    if(obj$.estEstim$corr){
-        corr <- obj$scatter
+    switch(type,
+           shrunk = {scatter <- obj$shrunkScatter},
+           filtered = {scatter <- obj$filteredScatter},
+           {scatter <- obj$scatter})
+    if(!is.null(scatter)) {
+        if(obj$corr){
+            corr <- scatter
+        } else {
+            corr <- cov2cor(scatter)
+        }
     } else {
-        corr <- cov2cor(obj$scatter)
+        corr <- scatter
     }
-
     return(corr)
 
 }
@@ -63,7 +84,7 @@ GetCorr.CMEest <- function(obj) {
 
 ##' .. content for \description{} (no empty lines) ..
 ##'
-##' .. content for \details{} ..
+##' .. cont ent for \details{} ..
 ##' @title First moment extraction
 ##' @param obj
 ##' @return Location
