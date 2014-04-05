@@ -3,7 +3,9 @@ data(sp500.subset)
 myCovSpec <- CMEspec(estim = "mle",
                      estimCtrl = list(corr = TRUE),
                      filter = "MP",
-                     filterCtrl = list(fit.type = "analogic", norm.meth = "partial"))
+                     filterCtrl = list(fit.type = "MDE", 
+                                       norm.meth = "partial", 
+                                       exclude.market = TRUE))
 myCovEst <- Estimate(myCovSpec, sp500.subset)
 
 plot(myCovEst$.filterEstim$eigHist)

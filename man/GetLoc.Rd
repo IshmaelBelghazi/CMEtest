@@ -14,7 +14,7 @@ Location
 .. content for \description{} (no empty lines) ..
 }
 \details{
-.. content for \details{} ..
+.. cont ent for \details{} ..
 }
 \author{
 Mohamed Ishmael Diwan Belghazi

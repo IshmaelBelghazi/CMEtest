@@ -80,8 +80,8 @@ summary(robCovSpec)
 ##  Generating Moment functions. These functions will dynamically compute
 ## location and scatter when passed to optimize.portfolio.
 
-MleMomentFUN <- MakeMomentFUN(mleCovSpec)
-RobMomentFUN <- MakeMomentFUN(robCovSpec)
+MleMomentFUN <- MakeMomentFUN(mleCovSpec, type = "regular")
+RobMomentFUN <- MakeMomentFUN(robCovSpec, type = "regular")
 
 ###################################
 ## Let's Optimize the potfolios! ##
@@ -114,8 +114,8 @@ robCovEst <- Estimate(robCovSpec, returns)
 class(robCovEst)
 
 ## Now we create Precomputed moment functions
-MlePrecompMomentFUN <- MakeMomentFUN(mleCovEst)
-RobPrecompMomentFUN <- MakeMomentFUN(robCovEst)
+MlePrecompMomentFUN <- MakeMomentFUN(mleCovEst, type = "regular")
+RobPrecompMomentFUN <- MakeMomentFUN(robCovEst, type = "regular")
 
 # mle version
 opt_gmv_mle <- optimize.portfolio(R = returns,
@@ -131,6 +131,30 @@ opt_gmv_rob <- optimize.portfolio(R = returns,
                                   momentFUN = "RobPrecompMomentFUN",
                                   trace = TRUE)
 
-# Exctracting the weigths
+# #Extracting the weigths
 print(extractWeights(opt_gmv_mle))
 print(extractWeights(opt_gmv_rob))
+
+# Specifying RMT filtering
+
+filteredCorSpec <- CMEspec(estim = "mle",
+                           estimCtrl = list(corr = TRUE),
+                           filter = "MP",
+                           filterCtrl = list(fit.type = "MDE", 
+                                             norm.meth = "partial", 
+                                             exclude.market = FALSE))
+
+## Specifying filtered moment function
+filteredMleMomentFUN <- MakeMomentFUN(filteredCorSpec, type = "filtered")
+
+## Estimating filtered correlation
+filteredCorEst <- Estimate(filteredCorSpec, sp500.subset)
+
+## let us get the filtered correlation matrix
+print(head(GetCor(filteredCorEst, "filtered")))
+
+## let us get the non noisy eigenvalues and eigenvectors
+print(filteredCorEst$.filterEstim$signalEigVals)
+print(head(filteredCorEst$.filterEstim$signalEigVecs))
+
+

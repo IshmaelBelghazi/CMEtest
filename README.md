@@ -52,7 +52,7 @@ Fixed-Rank: Not Implemented
 Proportional-Rank: Not Implemented    
 
 ## Filtering
-RMT: Not Implemented  
+RMT: Implemented  
 
 ## Unequal data protocols:
 FMMC: Not implemented    

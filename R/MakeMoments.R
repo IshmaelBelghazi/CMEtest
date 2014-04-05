@@ -11,12 +11,12 @@
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @import PerformanceAnalytics
 ##' @export
-MakeMomentFUN <- function(obj, ...) UseMethod('MakeMomentFUN')
+MakeMomentFUN <- function(obj, type,...) UseMethod('MakeMomentFUN')
 ##' @export
-MakeMomentFUN.default <- function(obj, ...) cat("Class unknown")
+MakeMomentFUN.default <- function(obj, type,...) cat("Class unknown")
 
 ##' @export
-MakeMomentFUN.CMEspec <- function(obj, ...) {
+MakeMomentFUN.CMEspec <- function(obj, type,...) {
 
     momFUN <- function(R, portfolio, momentargs = list(), ...) {
 
@@ -28,7 +28,7 @@ MakeMomentFUN.CMEspec <- function(obj, ...) {
             momentargs$mu <- matrix(GetLoc(CMEmom), ncol = 1)
 
         if(is.null(momentargs$sigma))
-            momentargs$sigma <- GetCov(CMEmom)
+            momentargs$sigma <- GetCov(CMEmom, type)
 
         if(is.null(momentargs$m3))
             momentargs$m3 <- PerformanceAnalytics:::M3.MM(R)
@@ -44,7 +44,7 @@ MakeMomentFUN.CMEspec <- function(obj, ...) {
 }
 ##' @import PerformanceAnalytics
 ##' @export
-MakeMomentFUN.CMEest <- function(obj, ...) {
+MakeMomentFUN.CMEest <- function(obj, type,...) {
 
     momFUN <- function(R, portfolio, momentargs = list(), ...) {
 
@@ -54,7 +54,7 @@ MakeMomentFUN.CMEest <- function(obj, ...) {
             momentargs$mu <- matrix(GetLoc(obj), ncol = 1)
 
         if(is.null(momentargs$sigma))
-            momentargs$sigma <-  GetCov(obj)
+            momentargs$sigma <-  GetCov(obj, type)
 
         if(is.null(momentargs$m3))
             momentargs$m3 <- PerformanceAnalytics:::M3.MM(R)

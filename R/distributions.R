@@ -13,101 +13,48 @@
 #,----
 #| Marchenko-Pastur density
 #`----
-
-
-
-
-dmarpasV2 <- function(x, sigma, Q) {
-    x <- as.array(x)
-    if(sigma < 0)
-        stop("sigma should be positive")
-    if(Q < 0)
-        stop("Q should be positive")
-
-    lambdaPlus <- sigma^2 * (1 + sqrt(1/Q))^2
-    lambdaMinus <- sigma^2 * (1 - sqrt(1/Q))^2
-    constant <- Q/(2 * pi * sigma^2)
-
-    supportCond <- (lambdaMinus < x) && (x < lambdaPlus)
-    density <- array(0, dim(x))
-
-
-    density[supportCond] <- constant *
-        sqrt((lambdaPlus - x[supportCond]) *
-             (x[supportCond] - lambdaMinus)) / x[supportCond]
-
-    cat(density[supportCond])
-    return(density)
-}
 ##'@export
-dmarpasV1 <- function(x, sigma, Q, fit = FALSE) {
-    ##x <- as.array(x)
-    if(sigma < 0)
-        stop("sigma should be positive")
-    if(Q < 0)
-        stop("Q should be positive")
-
-    lambdaPlus <- sigma^2 * (1 + sqrt(1/Q))^2
-    lambdaMinus <- sigma^2 * (1 - sqrt(1/Q))^2
-
-    supportCond <- (lambdaMinus < x) && (x < lambdaPlus)
-
-    if(supportCond) {
-    constant <- Q/(2 * pi * sigma^2)
-    density <- constant * sqrt((lambdaPlus - x) * (x - lambdaMinus)) / x
-    } else {
-
-    density <- if(fit) .Machine$double.xmin else 0 ## Hack for mle optimization
-
-    }
-
-    return(density)
+dmarpas <- function(x, sigma, Q) {
+  ## Getting Marchenko-Pastur Eigenvalues
+  marpasEig <- marpasEig(sigma, Q)
+  lambdaMinus <- marpasEig[1]
+  lambdaPlus <- marpasEig[2]
+  
+  density <- ifelse( Q == 1 & x == 0 & 1/x > 0, Inf, 
+                     ifelse( x <= lambdaMinus | x >= lambdaPlus, 0,
+                             suppressWarnings(
+                               Q/( 2 * pi * sigma^2 *x )
+                               *
+                                 sqrt((lambdaPlus - x) * (x - lambdaMinus)) 
+                             ) ) )
+  
+  return(density)
+  
 }
-
-
 
 #,----
 #| Marchenko-Pastur distribution
 #`----
-##'@export
-dmarpas <- function(x, sigma, Q) {
 
-    density <- Vectorize(function(X) dmarpasV1(X, sigma, Q))
-
-    return(density(x))
+pmarpas <- function(q, sigma, Q) {
+  ## Getting Marchenko-Pastur Eigenvalues
+  marpasEig <- marpasEig(sigma, Q)
+  lambdaMinus <- marpasEig[1]
+  lambdaPlus <- marpasEig[2]
+  
+  integrand <- function(x) dmarpas(x, sigma, Q)
+  cdf <- ifelse( q <= lambdaMinus, 0, 
+               ifelse( q >= lambdaPlus, 1,
+                       integrate(integrand, lambdaMinus, q )$value 
+               )
+  )
+  cdf <- ifelse( Q < 1 && q >= 0, cdf + (1 - Q), cdf)
+  
+  return(cdf) 
 }
 ##'@export
-dmarpasFit <- function(x, sigma, Q){
-    density <- Vectorize(function(x) dmarpasV1(x, sigma, Q, TRUE))
+pmarpas <- Vectorize(pmarpas)
 
-    return(density(x))
-}
-##'@export
-pmarpas <- function(p, sigma, Q) {
-
-    if(is.infinite(p) && (sign(p) == -1)) {
-        cdf <- 0
-    } else {
-        integrand <- function(x) dmarpas(x, sigma, Q)
-        integral <- integrate(integrand, lower = -Inf, upper = p)
-        cdf <- integral$value
-    }
-
-    return(cdf)
-}
-##'@export
-pmarpasFit <- function(p, sigma, Q) {
-
-    if(is.infinite(p) && (sign(p) == -1)) {
-        cdf <- 0
-    } else {
-        integrand <- function(x) dmarpas(x, sigma, Q, TRUE)
-        integral <- integrate(integrand, lower = -Inf, upper = p)
-        cdf <- integral$value
-    }
-
-    return(cdf)
-}
 
 #,----
 #| Marchenko-Pastur Moments
@@ -142,8 +89,8 @@ marpas <- function(k, sigma, Q, return.all = FALSE) {
 ##'@export
 marpasEig <- function(sigma, Q) {
 
-    eigVals <- list(lambdaMinus = sigma^2 * (1 - sqrt(1/Q))^2,
-                    lambdaPlus = sigma^2 * (1 + sqrt(1/Q))^2)
+    eigVals <- c(lambdaMinus = sigma^2 * (1 - sqrt(1/Q))^2,
+                 lambdaPlus = sigma^2 * (1 + sqrt(1/Q))^2)
 
     return(eigVals)
 

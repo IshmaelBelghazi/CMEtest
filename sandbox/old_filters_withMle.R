@@ -3,6 +3,7 @@
 ## Marchenko-Pastur based matrix filtering ##
 #############################################
 ## Following Bouchaud 2004 and Gatheral 2008
+##'@import fitdistrplus
 ##'@export
 MPfilter <- function(shrinkEst, ...){
 
@@ -28,10 +29,8 @@ MPfilter <- function(shrinkEst, ...){
 .FilterMP <- function(R,
                       cov,
                       corr,
-                      fit.type = "MDE",
-                      initial.points = 100,
-                      exclude.market = FALSE,
-                      norm.meth = "partial",
+                      norm.meth = "full",
+                      fit.type = "analogic",
                       breaks = "FD",...) {
 
     Q <- GetQ(R)
@@ -42,16 +41,12 @@ MPfilter <- function(shrinkEst, ...){
 
     ## Getting empirical EigenValues density
     ## Should also try with kernel estimators
-    eigHist <- hist(eigVals, plot = FALSE, breaks = breaks)
+    eigHist <- hist(eigVals, probability = TRUE, plot = FALSE, breaks = breaks)
+    densEig <- eigHist$density
     ## Fitting EigenValues density.. this needs work...MLE optimization is difficult
-    if(!(fit.type %in% c("analogic", "MDE")))
-        stop("Unrecognized Fit type")
-    
-    if(fit.type == "MDE") {
-        marpasEsts <- .FitEigDensMDE(eigVals, Q, exclude.market, initial.points, ...)
-    } 
-    
-    if(fit.type == "analogic"){
+    if(fit.type %in% c("best", "median", "average")) {
+        marpasEsts <- .FitEigDensMLE(densEig,Q, ...)
+    } else {
         marpasEsts <- .FitEigDensAnalogic(eigVals, Q, ...)
     }
     
@@ -61,8 +56,8 @@ MPfilter <- function(shrinkEst, ...){
     lambdaMax <- marpasEig(fitSigma, fitQ)[2]
 
     ## Flatening Noisy egeinvalues
-    noiseIdx <- (eigVals <= lambdaMax)
     fEigVals <- eigVals
+    noiseIdx <- (eigVals <= lambdaMax)
     fEigVals[noiseIdx] <- 1
     ## Renormalizing
     M <- length(eigVals)
@@ -71,7 +66,8 @@ MPfilter <- function(shrinkEst, ...){
         fEigVals <- fEigVals * 1/mean(fEigVals)
     } else {
     ## Renormalizing method II: only filtered EigenVals
-        fEigVals[noiseIdx] <- mean(eigVals[noiseIdx])
+        nNoiseEigs <- length(fEigVals[noiseIdx])
+        fEigVals[noiseIdx] <- (M - sum(fEigVals[!noiseIdx]))/nNoiseEigs
     }
     
     ## Reforming correlation
@@ -87,6 +83,7 @@ MPfilter <- function(shrinkEst, ...){
                               noiseEigVals = eigVals[noiseIdx],
                               signalEigVecs = eigVecs[, seq(1, M)[!noiseIdx]],
                               signalEigVals = eigVals[!noiseIdx],
+                              eigDens = eigDens,
                               eigHist = eigHist,
                               mpEstimates = marpasEsts,
                               lambdaMax = lambdaMax))
@@ -94,47 +91,55 @@ MPfilter <- function(shrinkEst, ...){
     return(filteredEstim)
 
 }
-##'@import nls2
-.FitEigDensMDE <- function(eigVals, Q, exclude.market = FALSE, initial.points = 100, ...) {
-  ## Fits the Marchenko-Pastur distribution using Cramer-von-Mises Criterion
-  ## this allows to bypass the addition of an additional statistical error coming
-  ## from the estimation of the density. This come at the price of statistical efficiency.
-  ## The process is in three steps. First the analogic fit is called and used as a starting point.
-  ## If it fails. Then a number of random starting points are used as intial points and the estimator
-  ## with the lowest CvM statistic is returned. 
-  
-  if(exclude.market) {
-    xdata <- eigVals[-1]
-  } else {
-    xdata <- eigVals
-  }
-  
-  targets <- ecdf(xdata)(xdata)
-  objective <- targets~pmarpas(xdata, sigma, Q)
-  lower <- c(0, 0)
-  
-  mpFit <- function(X) nls2(objective, 
-                            lower = lower, 
-                            algorithm = "port", 
-                            start = list(sigma = X[1], Q = X[2]))
-  
-  tryCatch({
-    start <- .FitEigDensAnalogic(eigVals, Q)
-    estimation <- mpFit(start)},
-           error = function(c) {
-             message("Combined estimation approach failed.")
-             message(c)
-             message(sprintf("Starting again with %s initial random points", initial.points))
-             start <- matrix(c(runif(initial.points, 0.05, 0.95),
-                               runif(initial.points, 0.05, Q * 2)),
-                             ncol = 2)
-             estimation <- mpFit(start)
-           })
-  estimates <- coef(estimation)
 
-  return(estimates)  
+.FitEigDensMLE <- function(empirEigDens,
+                           Q,
+                           initial.points = 100,
+                           Q.mult = 1,
+                           fit.type = "median", ...){
+
+    
+    ## generating initial point matrix
+    start <- matrix(c(runif(initial.points, 0.05, 0.95),
+                      runif(initial.points, 0.05, Q * Q.mult)),
+                    ncol = 2)
+    ## Changing variables to turn constrained optimization problem to un constrained
+    ## We write \sigma = Log(1 + exp(\theta_S)) and \Q = Log(1 + exp(\theta_Q))
+    ## change of variable. Note change of variables removed for now.
+
+
+    ## Specifying lower bound
+    lower <- c(0, 0)
+    multiFit <- function(X) tryCatch(fitdist(empirEigDens,
+                                             dmarpasFit,
+                                             start = list(sigma = X[1], Q = X[2]),
+                                             lower = lower),
+                                     error = function(c) list(loglik = Inf, err = c),
+                                     silent = TRUE)
+    
+    densFit <- apply(start, 1, multiFit)
+
+    ## Getting Index
+    logLiks <- sapply(densFit, function(X) X[['loglik']])
+    bestFitIdx <- which.min(logLiks)
+    goodFitsIdx <- which(logLiks != Inf)
+    goodFits <- densFit[goodFitsIdx]
+    goodLogLiks <- sapply(goodFits, function(X) X[['loglik']])
+    medianFitIdx <- order(goodLogLiks)[floor(length(goodLogLiks)/2)]
+
+
+    ## Getting Estimators
+    bestFit <- densFit[[bestFitIdx]][['estimate']]
+    averageFit <- rowMeans(sapply(goodFits, function(X) X[['estimate']]))
+    medianFit <- goodFits[[medianFitIdx]][['estimate']]
+    
+    result <- get(paste0(fit.type, "Fit"))
+    names(result) <- paste0(names(result),"(", fit.type,")")
+    ## Transfer standard deviation.
+
+    return(result)
+
 } 
-
 
 .FitEigDensAnalogic <- function(eigVals, Q, ...){
     ## Adjusted analogic estimate following bouchaud 2000.

@@ -26,6 +26,7 @@
     return(smoothEst)
 
 }
+##'@import robust
 ##'@export
 .MakeEstimEst <- function(spec, smoothEst) {
     ## Estimations constructors

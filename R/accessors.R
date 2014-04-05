@@ -56,13 +56,13 @@ GetCov.CMEest <- function(obj, type = "default") {
 ##' @return Returns Correlation
 ##' @author Mohamed Ishmael Diwan Belghazi
 ##' @export
-GetCorr <- function(obj, type = "default") UseMethod("GetCorr")
+GetCor <- function(obj, type = "default") UseMethod("GetCor")
 ##' @export
-GetCorr.default <- function(obj, type = "default") warning("Unknown class")
+GetCor.default <- function(obj, type = "default") warning("Unknown class")
 ##' @export
-GetCorr.CMEspec <- function(obj, type = "default") cat("Estimate specfication first")
+GetCor.CMEspec <- function(obj, type = "default") cat("Estimate specfication first")
 ##' @export
-GetCorr.CMEest <- function(obj, type = "default") {
+GetCor.CMEest <- function(obj, type = "default") {
 
     switch(type,
            shrunk = {scatter <- obj$shrunkScatter},

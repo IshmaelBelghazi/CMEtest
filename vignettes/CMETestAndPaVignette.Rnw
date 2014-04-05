@@ -16,14 +16,14 @@
 \maketitle
 
 \begin{abstract}
-The purpose of this vignette is to show how to pass custom location and scatter estimators to PortfolioAnalytics using CMEtest.
+The purpose of this vignette is to show how to pass custom location and scatter estimators to PortfolioAnalytics using CMEtest. In a first part we will show how to pass MLE and robust location and scatter to a global minimum variance object. In a second, we expose how to operate Random Matrix theory type filtering on scatter matrices using CMEtest.
 \end{abstract}
 
 \tableofcontents
 
 \section{Preliminaries}
 \subsection{Loading packages}
-Loading Packages and sourcefiles. CMEtest is not yet under package format as some thinking is still required concerning its internal architecture.
+Loading Packages and sourcefiles. 
 <<>>=
 # Loading packages
 suppressMessages(require(PortfolioAnalytics))
@@ -51,6 +51,12 @@ We take 50 observations for 10 assets.
 data(sp500.subset)
 returns <- sp500.subset[1:50,1:10]
 assets <- colnames(returns)
+@
+
+\subsection{Showing avaible methods}
+One can easily query the list of avaible estimation methods. They come in four categories.
+<<>>=
+CMEhelp()
 @
 
 
@@ -125,14 +131,15 @@ summary(robCovSpec)
 
 \subsection{Creating moment functions for PortfolioAnalytics}
 
-Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough to call the MakeMomentFUN function on the specification object.
+Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough to call the MakeMomentFUN function on the specification object and specify the type of scatter matrix to return. 
+Indeed, if a shrinking or filtering method is selected there is possibly three covariance matrix in a CMEtest object. The type "regular" is the scatter estimated by a mle or a robust method. The type "shrunk", if it exist, is the shrunk previously estimated scatted matrix. The type "filtered" refers to the filtered version of the previously shrunk, or just estimated scatter if no shrinking method were selected. Note that this is also applicable for the accessors "GetLoc" and "GetCor". However, if no type is specified the accessors just return the "regular" scatter (which can be robust or not, depending on the estimation method choosen in the specification)
 
 <<>>=
 ##  Generating Moment functions. These functions will dynamically compute
 ## location and scatter when passed to optimize.portfolio.
 
-MleMomentFUN <- MakeMomentFUN(mleCovSpec)
-RobMomentFUN <- MakeMomentFUN(robCovSpec)
+MleMomentFUN <- MakeMomentFUN(mleCovSpec, type = "regular")
+RobMomentFUN <- MakeMomentFUN(robCovSpec, type = "regular")
 @
 Note that for RobMomenFun, only the location and scatter are robust. The third and fourth moment are not computed using robust method. It does not matter if the optimization method and/or objective use at most the first two moments.
 An example where it matters, is when using the Edgeworth or Cornish-Fisher approximation of a non-normal distribution. The latter approximations being based on the four first cumulant.
@@ -188,11 +195,11 @@ Althought it is not necessary, let's get the empirical and robust correlations j
 MLE estimator correlation:
 <<>>=
 ## Using correlation getter on the estimation object.
-GetCorr(mleCovEst)
+GetCor(mleCovEst)
 @
 Robust Mcd estimator correlation:
 <<>>=
-GetCorr(robCovEst)
+GetCor(robCovEst)
 @
 Similarly, we can get the first moment.
 For the classical estimation:
@@ -209,8 +216,8 @@ Now that we have the estimation object, generating the precomputed moment functi
 
 <<>>=
 ## Now we create Precomputed moment functions
-MlePrecompMomentFUN <- MakeMomentFUN(mleCovEst)
-RobPrecompMomentFUN <- MakeMomentFUN(robCovEst)
+MlePrecompMomentFUN <- MakeMomentFUN(mleCovEst, type = "regular")
+RobPrecompMomentFUN <- MakeMomentFUN(robCovEst, type = "regular")
 @
 
 \subsection{Optimizing portfolio with precomputed moment functions}
@@ -234,5 +241,62 @@ extractWeights(opt_gmv_mle)
 extractWeights(opt_gmv_rob)
 
 @
+\section{Filtering with Random Matrix Theory}
+\subsection{Usefulness and methodology}
+The quality of a dataset is defined as the ratio of returns to the number of assets.
+Having a reliable estimate of scatter is especially difficult when the number of assets is large as it will be very difficult to get enough observations to compensate the quality of the dataset. In this case, it is hard to distinguish between measurement error, or noise, and true correlation.
+
+A way to disentangle the noise from the estimation is to compare the density of the spectrum of the estimated correlation to that of a random positive definite symmetric matrix.
+
+Fortunatly, the distribution of the density of the eigenvalues of a random matrix is known. It is called the Marchenk-Pastur distribution(MP) with two parameter $\sigma$ and Q (the quality which is also a shape parameter).
+
+The recipe is then, to compare the two spectrums, and then all eigenvectors corresponding to eigenvalues below the MP eigenvalue(or the rightmost point if its support) are considered noisy. It is then enough, to spike the matrix by flattening the eigenvalues under the MP eigenvalue.
+
+In practice difficulties arise when we try to fit the MP distribution to the empirical density of the eigenvalues. Trying to get maximum likelihood estimate of the MP density is quite unstable for two major reasons.
+Firstly, it is difficult to estimates the empirical density of distribution. Histograms and kernel methods, even in one dimension, involves in this case a rather large statistical error since the bulk of the eigenvalues will be strongly clustered while some very significative eigenvalues will be spread out.
+Secondly, some outlying eigenvalues are order of magnitude grater than the other eigenvalues. Typically, in financial data, those outlying eigenvalues corresponds to the market and sectors.
+
+We offer two ways of fitting the MP distribution. 
+The first one, following bouchaud(2000) is to just substract the contribution of the market eigenvalue out 1 to get $\sigma^2$ and use the quality of the dataset for Q. We call this method "analogic".
+In the second one, we infer the parameters by minmizing the Cramer-Von-Mises criterion between the cumulative distribution of the MP distribution and the empirical distribution of the eigenvalues. This is a minimum distance estimation. We call this method "MDE".
+\subsection{Specifying a CMEtest object for MP filtering}
+We will use the whole data set, 200 observation for 75 assets, for a quality of 2.6666.
+We will fit the distribution using the MDE method and we choose not to exclude the market eigenvalues, even if it is clearly an outlier. We will filter an mle correlation. Of course we could have filtered any avaible robust method instead.
+
+<<>>=
+data(sp500.subset)
+filteredCorSpec <- CMEspec(estim = "mle",
+                           estimCtrl = list(corr = TRUE),
+                           filter = "MP",
+                           filterCtrl = list(fit.type = "MDE", 
+                                             norm.meth = "partial", 
+                                             exclude.market = FALSE))
+@
+The norm.meth variable refers to which eigenvalue flattening methodology we use. "partial" refers to replacing the noise eigenvalues by their average. If "full" is used then, the noise eigenvalues are replaced by one and then all the eigenvalues are renormalized so that their sum is equal to the number of assets.
+\subsection{Making filtered moment function for Portfolio Analytics}
+Now to get a filtered moment function is enough to do as above and replace "regular" by "filtered".
+<<>>=
+filteredMleMomentFUN <- MakeMomentFUN(filteredCorSpec, type = "filtered")
+@
+Please to note, that CMEtest takes care of converting correlation to covariance and conversly when it is necessary.
+Now it is enough to pass the function to a potfolio optimization as done previsouly.
+
+\subsection{Estimating and other uses}
+Let us estimates the specification.
+<<>>=
+filteredCorEst <- Estimate(filteredCorSpec, sp500.subset)
+@
+Let us get the filtered correlation matrix
+<<>>=
+head(GetCor(filteredCorEst, "filtered"))
+@
+
+Let us get all the non-noisy eigenvalues and eigenvectors.
+<<>>=
+print(filteredCorEst$.filterEstim$signalEigVals)
+print(head(filteredCorEst$.filterEstim$signalEigVecs))
+@
+
+Now this can be useful, as those eigenvectors can be seen as risk factors. As such, they can be either wrapped and be used to FactorAnalytics or be used within CMEtest in the Factor Model Monte Carlo methodology for unequal data.
 
 \end{document}

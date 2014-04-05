@@ -2,7 +2,7 @@
 \alias{MakeMomentFUN}
 \title{Generates moment function from spec or estimation object}
 \usage{
-MakeMomentFUN(obj, ...)
+MakeMomentFUN(obj, type, ...)
 }
 \arguments{
   \item{obj}{}

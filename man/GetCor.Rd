@@ -1,14 +1,14 @@
-\name{GetCov}
-\alias{GetCov}
-\title{Extact covariance from estimation object}
+\name{GetCor}
+\alias{GetCor}
+\title{Extracts Corrlation from estimation object}
 \usage{
-GetCov(obj, type = "default")
+GetCor(obj, type = "default")
 }
 \arguments{
-  \item{obj}{}
+  \item{Obj}{}
 }
 \value{
-covariance
+Returns Correlation
 }
 \description{
 .. content for \description{} (no empty lines) ..
