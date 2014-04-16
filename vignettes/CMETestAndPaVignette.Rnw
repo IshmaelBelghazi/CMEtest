@@ -23,7 +23,7 @@ The purpose of this vignette is to show how to pass custom location and scatter 
 
 \section{Preliminaries}
 \subsection{Loading packages}
-Loading Packages and sourcefiles. 
+Loading Packages and sourcefiles.
 <<>>=
 # Loading packages
 suppressMessages(require(PortfolioAnalytics))
@@ -53,8 +53,8 @@ returns <- sp500.subset[1:50,1:10]
 assets <- colnames(returns)
 @
 
-\subsection{Showing avaible methods}
-One can easily query the list of avaible estimation methods. They come in four categories.
+\subsection{Showing available methods}
+One can easily query the list of available estimation methods. They come in four categories.
 <<>>=
 CMEhelp()
 @
@@ -73,8 +73,8 @@ long_const = 0
 upper_box <- 0.60
 
 ## Setting constraints
-port_gmv <- add.constraint(portfolio = port_gmv, 
-                           type = "full_investment", 
+port_gmv <- add.constraint(portfolio = port_gmv,
+                           type = "full_investment",
                            enabled=TRUE)
 port_gmv <- add.constraint(portfolio = port_gmv,
                            type = "box",
@@ -131,8 +131,8 @@ summary(robCovSpec)
 
 \subsection{Creating moment functions for PortfolioAnalytics}
 
-Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough to call the MakeMomentFUN function on the specification object and specify the type of scatter matrix to return. 
-Indeed, if a shrinking or filtering method is selected there is possibly three covariance matrix in a CMEtest object. The type "regular" is the scatter estimated by a mle or a robust method. The type "shrunk", if it exist, is the shrunk previously estimated scatted matrix. The type "filtered" refers to the filtered version of the previously shrunk, or just estimated scatter if no shrinking method were selected. Note that this is also applicable for the accessors "GetLoc" and "GetCor". However, if no type is specified the accessors just return the "regular" scatter (which can be robust or not, depending on the estimation method choosen in the specification)
+Creating moment functions for Portfolio Analytics is straightforward using CMEtest. It is enough to call the MakeMomentFUN function on the specification object and specify the type of scatter matrix to return.
+Indeed, if a shrinking or filtering method is selected there is possibly three covariance matrix in a CMEtest object. The type "regular" is the scatter estimated by a mle or a robust method. The type "shrunk", if it exist, is the shrunk previously estimated scatted matrix. The type "filtered" refers to the filtered version of the previously shrunk, or just estimated scatter if no shrinking method were selected. Note that this is also applicable for the accessors "GetLoc" and "GetCor". However, if no type is specified the accessors just return the "regular" scatter (which can be robust or not, depending on the estimation method choosen in the specification).
 
 <<>>=
 ##  Generating Moment functions. These functions will dynamically compute
@@ -244,32 +244,37 @@ extractWeights(opt_gmv_rob)
 \section{Filtering with Random Matrix Theory}
 \subsection{Usefulness and methodology}
 The quality of a dataset is defined as the ratio of returns to the number of assets.
-Having a reliable estimate of scatter is especially difficult when the number of assets is large as it will be very difficult to get enough observations to compensate the quality of the dataset. In this case, it is hard to distinguish between measurement error, or noise, and true correlation.
+Having a reliable estimate of scatter is especially difficult when the number
+of assets is large as it will be very difficult to get enough observations to
+compensate for the quality of the dataset. In this case, it is hard to distinguish between measurement error, or noise, and true correlation.
 
-A way to disentangle the noise from the estimation is to compare the density of the spectrum of the estimated correlation to that of a random positive definite symmetric matrix.
+A way to disentangle the noise from the estimation is to compare the density of
+the spectrum of the estimated correlation to that of a positive definite
+symmetric matrix with random Gaussian entries.
 
-Fortunatly, the distribution of the density of the eigenvalues of a random matrix is known. It is called the Marchenk-Pastur distribution(MP) with two parameter $\sigma$ and Q (the quality which is also a shape parameter).
+Fortunately, the distribution of the density of the eigenvalues of such a random matrix is known. It is called the Marchenko-Pastur distribution(MP) with two parameter $\sigma$ and Q (the quality which is also a shape parameter).
 
-The recipe is then, to compare the two spectrums, and then all eigenvectors corresponding to eigenvalues below the MP eigenvalue(or the rightmost point if its support) are considered noisy. It is then enough, to spike the matrix by flattening the eigenvalues under the MP eigenvalue.
+The recipe is then to compare the two spectrums. All eigenvectors corresponding to eigenvalues below the MP eigenvalue(or the rightmost point if its support) are considered noisy. It is then enough, to spike the matrix by flattening the eigenvalues under the MP eigenvalue.
 
 In practice difficulties arise when we try to fit the MP distribution to the empirical density of the eigenvalues. Trying to get maximum likelihood estimate of the MP density is quite unstable for two major reasons.
 Firstly, it is difficult to estimates the empirical density of distribution. Histograms and kernel methods, even in one dimension, involves in this case a rather large statistical error since the bulk of the eigenvalues will be strongly clustered while some very significative eigenvalues will be spread out.
 Secondly, some outlying eigenvalues are order of magnitude grater than the other eigenvalues. Typically, in financial data, those outlying eigenvalues corresponds to the market and sectors.
 
-We offer two ways of fitting the MP distribution. 
-The first one, following bouchaud(2000) is to just substract the contribution of the market eigenvalue out 1 to get $\sigma^2$ and use the quality of the dataset for Q. We call this method "analogic".
-In the second one, we infer the parameters by minmizing the Cramer-Von-Mises criterion between the cumulative distribution of the MP distribution and the empirical distribution of the eigenvalues. This is a minimum distance estimation. We call this method "MDE".
+We offer two ways of fitting the MP distribution.
+The first one, following bouchaud(2000) is to just substract the contribution
+of the market eigenvalue of the variance to get $\sigma^2$ and use the quality of the dataset for Q. We call this method "analogic".
+In the second one, we infer the parameters by minimizing the Cramer-Von-Mises criterion between the cumulative distribution of the MP distribution and the empirical distribution of the eigenvalues. This is a minimum distance estimation. We call this method "MDE".
 \subsection{Specifying a CMEtest object for MP filtering}
 We will use the whole data set, 200 observation for 75 assets, for a quality of 2.6666.
-We will fit the distribution using the MDE method and we choose not to exclude the market eigenvalues, even if it is clearly an outlier. We will filter an mle correlation. Of course we could have filtered any avaible robust method instead.
+We will fit the distribution using the MDE method and we choose not to exclude the market eigenvalues, even if it is clearly an outlier. We will filter an mle correlation. Of course we could have filtered any available robust method instead.
 
 <<>>=
 data(sp500.subset)
 filteredCorSpec <- CMEspec(estim = "mle",
                            estimCtrl = list(corr = TRUE),
                            filter = "MP",
-                           filterCtrl = list(fit.type = "MDE", 
-                                             norm.meth = "partial", 
+                           filterCtrl = list(fit.type = "MDE",
+                                             norm.meth = "partial",
                                              exclude.market = FALSE))
 @
 The norm.meth variable refers to which eigenvalue flattening methodology we use. "partial" refers to replacing the noise eigenvalues by their average. If "full" is used then, the noise eigenvalues are replaced by one and then all the eigenvalues are renormalized so that their sum is equal to the number of assets.
