@@ -41,7 +41,8 @@ OQC: Implemented
 GK:  Implemented
 
 ### EWMA:
-Classical: Not Implemented
+Classical: Not Implemented  
+
 Robust: Not Implemented
 
 ## Covariance Shrinking:  
