@@ -53,10 +53,11 @@ Fixed-Rank: Not Implemented
 Proportional-Rank: Not Implemented    
 
 ## Filtering
-RMT: Implemented  
-
+Random Matrix theory: Implemented       
+Analogical Estimator: Implemented  
+Minimimum Deviance Estimator: Implemented  
 ## Unequal data protocols:
-FMMC: Not implemented    
+Facor Model Monte Carlo: Not implemented    
 Staumbaugh: Not implemented    
 Robust Staumbaugh: Not Implemented  
 
